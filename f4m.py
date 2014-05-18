@@ -88,10 +88,18 @@ class F4VBox(object):
     See "1.3 F4V box format" section
     '''
     def __init__(self, data):
-        # big endian unsigned integer
-        self.size    = struct.unpack('>I', data[:4])
-        self.type    = data[4:8]
-        self.payload = data[8:]
+        raw_data = None
+        if isinstance(data, RawDataIterator):
+            raw_data = data
+        else:
+            raw_data = RawDataIterator(data)
+
+        self.size    = raw_data.readUI32()
+        self.type    = raw_data.read(4)
+        # FIXME: extended size
+        #self.payload = raw_data.remaining()
+
+        self.raw_data = raw_data
 
 class Manifest(object):
     '''Parse the manifest file'''
