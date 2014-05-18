@@ -208,7 +208,7 @@ class Manifest(object):
     '''Parse the manifest file'''
     ADOBE_NS = 'http://ns.adobe.com/f4m/1.0'
     ADOBE_NSS = {'namespaces': {'adobe': ADOBE_NS}}
-    def __init__(self, filepath=None):
+    def __init__(self, filepath=None, base_url=None):
         logger.info('loading data from %s' % filepath)
         manifest_tree = etree.parse(filepath)
 
@@ -218,7 +218,7 @@ class Manifest(object):
 
         baseURL = self._get_from_xpath(manifest_tree, '//adobe:manifest/adobe:baseURL')
 
-        self.baseURL = baseURL[0] if len(baseURL) > 0 else 'miao'
+        self.baseURL = baseURL if baseURL else base_url
 
         medias = self._get_from_xpath(manifest_tree, '//adobe:manifest/adobe:media')
         self.medias = []
