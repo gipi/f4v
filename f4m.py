@@ -21,6 +21,66 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(stream)
 stream.setFormatter(formatter)
 
+class RawDataIterator(object):
+    def __init__(self, data):
+        self.data = data
+        self.index = 0
+        self.endian = '>' if True else '<'
+
+    def readUI2(self):
+        return self._read('>')
+
+    def readUI8(self):
+        return self._read('>B', 1)
+
+    def readUI16(self):
+        return self._read('>H', 2)
+
+    def readUI32(self):
+        return self._read('>I', 4)
+
+    def readUI64(self):
+        return self._read('>Q', 8)
+
+    def resetTo(self, index=0):
+        self.index = index
+
+    def rewind(self, offset):
+        self.index -= offset
+
+    def readNullString(self):
+        null_string = ''
+
+        while True:
+            c = self.data[self.index]
+            self.index += 1
+
+            if c == '\x00':
+                break
+
+
+            null_string += c
+
+        return null_string
+
+    def read(self, size):
+        start = self.index
+        end   = self.index + size
+
+        self.index = end
+
+        return self.data[start:end]
+
+    def remaining(self):
+        return self.read(len(self.data) - self.index)
+
+    def _read(self, pattern , size):
+        start = self.index
+        end   = self.index + size
+
+        self.index = end
+
+        return struct.unpack(pattern, self.data[start:end])[0]
 
 class F4VBox(object):
     '''Generic format of a F4VBox.
