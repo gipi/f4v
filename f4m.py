@@ -146,6 +146,9 @@ class F4VBootstrapInfoBox(F4VBox):
 
         logger.debug('found %d fragment run table entries' % self.fragmentRunTableCount)
 
+        for x in range(self.fragmentRunTableCount):
+            self.fragmentRunTableEntries.append(F4VFragmentRunTableBox(self.raw_data))
+
 class F4VSegmentRunTableBox(F4VBox):
     def __init__(self, data):
         super(F4VSegmentRunTableBox, self).__init__(data)
@@ -164,10 +167,42 @@ class F4VSegmentRunTableBox(F4VBox):
         logger.debug('found %d segment run entries' % self.segmentRunEntryCount)
 
         for x in range(self.segmentRunEntryCount):
-            self.segmentRunEntryTable.append({
-                'first_segment': self.raw_data.readUI32(),
-                'fragments_per_segment': self.raw_data.readUI32()
-            })
+            first_segment = self.raw_data.readUI32()
+            fragments_per_segment = self.raw_data.readUI32()
+
+            entry = {
+                'first_segment': first_segment,
+                'fragments_per_segment': fragments_per_segment,
+            }
+
+            logger.debug(entry)
+            self.segmentRunEntryTable.append(entry)
+
+class F4VFragmentRunTableBox(F4VBox):
+    def __init__(self, data):
+        super(F4VFragmentRunTableBox, self).__init__(data)
+
+        self.version = self.raw_data.readUI8()
+        self.flags   = self.raw_data.read(3)
+        self.timeScale = self.raw_data.readUI32()
+        self.qualityEntryCount = self.raw_data.readUI8()
+        self.qualitySegmentURLModifiers = []
+
+        for x in range(self.qualityEntryCount):
+            self.qualitySegmentURLModifiers.append(self.raw_data.readNullString())
+
+        self.fragmentRunEntryCount = self.raw_data.readUI32()
+        self.fragmentRunEntryTable = []
+
+        for x in range(self.fragmentRunEntryCount):
+            d = {}
+            d['first_fragment'] = self.raw_data.readUI32()
+            d['first_fragment_timestamp'] = self.raw_data.readUI64()
+            d['fragment_duration'] = self.raw_data.readUI32()
+            d['discontinuity_indicator'] =  self.raw_data.readUI8() if d['fragment_duration'] == 0 else None,
+            logger.debug(d)
+
+            self.fragmentRunEntryTable.append(d)
 
 class Manifest(object):
     '''Parse the manifest file'''
