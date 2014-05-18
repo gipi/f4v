@@ -220,6 +220,24 @@ class Manifest(object):
 
         self.baseURL = baseURL[0] if len(baseURL) > 0 else 'miao'
 
+        medias = self._get_from_xpath(manifest_tree, '//adobe:manifest/adobe:media')
+        self.medias = []
+
+        def __get_attr(node, attr):
+            return node.attrib[attr] if node.attrib.has_key(attr) else None
+
+        for m in medias:
+            media_attr = {
+                'url':             __get_attr(m, 'url'),
+                'bitrate':         __get_attr(m, 'bitrate'),
+                'width':           __get_attr(m, 'width'),
+                'height':          __get_attr(m, 'height'),
+                'bootstrapInfoId': __get_attr(m, 'bootstrapInfoId'),
+                # FIXME: add missing info
+            }
+            logger.debug('found media: %s' % media_attr)
+            self.medias.append(media_attr)
+
     def _get_from_xpath(self, tree, xpath):
         return tree.xpath(xpath, **self.ADOBE_NSS)
 
