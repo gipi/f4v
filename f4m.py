@@ -101,6 +101,74 @@ class F4VBox(object):
 
         self.raw_data = raw_data
 
+class F4VBootstrapInfoBox(F4VBox):
+    def __init__(self, data):
+        super(F4VBootstrapInfoBox, self).__init__(data)
+
+        self.version             = self.raw_data.readUI8()
+        # reserved and set to zero
+        self.flags               = self.raw_data.read(3)
+        self.boostrapInfoVersion = self.raw_data.readUI32()
+        # profile, live, update, reserved
+        self.boh                 = self.raw_data.read(1)
+        self.timescale           = self.raw_data.readUI32()
+        self.currentMediaTime    = self.raw_data.readUI64()
+        self.SmpteTimeCodeOffset = self.raw_data.readUI64()
+        self.movieIdentifier     = self.raw_data.readNullString()
+        self.serverEntryCount    = self.raw_data.readUI8()
+        self.serverEntryTable    = []
+
+        logger.debug('found %d server entries' % self.serverEntryCount)
+
+        for x in range(self.serverEntryCount):
+            self.serverEntryTable.append(self.raw_data.readNullString())
+
+        self.qualityEntryCount  = self.raw_data.readUI8()
+        self.qualityEntryTable  = []
+
+        logger.debug('found %d quality entries' % self.qualityEntryCount)
+
+        for x in range(self.qualityEntryCount):
+            self.qualityEntryTable.append(self.raw_data.readNullString())
+
+        self.drmData            = self.raw_data.readNullString()
+        self.metadata           = self.raw_data.readNullString()
+        self.segmentRunTableCount = self.raw_data.readUI8()
+        self.segmentRunTableEntries = []
+
+        logger.debug('found %d segment run table entries' % self.segmentRunTableCount)
+
+        for x in range(self.segmentRunTableCount):
+           self.segmentRunTableEntries.append(F4VSegmentRunTableBox(self.raw_data))
+
+        self.fragmentRunTableCount = self.raw_data.readUI8()
+        self.fragmentRunTableEntries = []
+
+        logger.debug('found %d fragment run table entries' % self.fragmentRunTableCount)
+
+class F4VSegmentRunTableBox(F4VBox):
+    def __init__(self, data):
+        super(F4VSegmentRunTableBox, self).__init__(data)
+
+        self.version                    = self.raw_data.readUI8()
+        self.flags                      = self.raw_data.read(3)
+        self.qualityEntryCount          = self.raw_data.readUI8()
+        self.qualitySegmentURLModifiers = []
+
+        for x in range(self.qualityEntryCount):
+            self.qualitySegmentURLModifiers.append(self.raw_data.readNullString())
+
+        self.segmentRunEntryCount       = self.raw_data.readUI32()
+        self.segmentRunEntryTable       = []
+
+        logger.debug('found %d segment run entries' % self.segmentRunEntryCount)
+
+        for x in range(self.segmentRunEntryCount):
+            self.segmentRunEntryTable.append({
+                'first_segment': self.raw_data.readUI32(),
+                'fragments_per_segment': self.raw_data.readUI32()
+            })
+
 class Manifest(object):
     '''Parse the manifest file'''
     ADOBE_NS = 'http://ns.adobe.com/f4m/1.0'
@@ -111,7 +179,7 @@ class Manifest(object):
 
         bootstrapInfoNodes = self._get_from_xpath(manifest_tree, '//adobe:manifest/adobe:bootstrapInfo')
         if len(bootstrapInfoNodes) > 0:
-            self.bootstrapBox = F4VBox(base64.b64decode(bootstrapInfoNodes[0].text))
+            self.bootstrapBox = F4VBootstrapInfoBox(base64.b64decode(bootstrapInfoNodes[0].text))
 
         baseURL = self._get_from_xpath(manifest_tree, '//adobe:manifest/adobe:baseURL')
 
