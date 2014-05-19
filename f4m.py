@@ -24,6 +24,19 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(stream)
 stream.setFormatter(formatter)
 
+def iterOver(data):
+    '''Interesting fact: having the box size at the start of it
+    we can jump from one to the next using that as offset
+    '''
+    raw_data = RawDataIterator(data)
+    while raw_data.index < len(data):
+        box_size  = raw_data.readUI32()
+        box_type = raw_data.read(4)
+
+        raw_data.move(box_size - 8)
+
+        yield (box_size, box_type)
+
 class RawDataIterator(object):
     def __init__(self, data):
         self.data = data
@@ -47,6 +60,9 @@ class RawDataIterator(object):
 
     def resetTo(self, index=0):
         self.index = index
+
+    def move(self, offset):
+        self.index += offset
 
     def rewind(self, offset):
         self.index -= offset
