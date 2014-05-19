@@ -11,6 +11,8 @@ import base64
 import logging
 import struct
 import sys
+import os
+import requests
 
 
 stream = logging.StreamHandler()
@@ -255,10 +257,24 @@ def usage(progname):
     print('usage: %s <manifest>' % progname)
     sys.exit(0)
 
+def downloadManifest(url):
+    r = requests.get(url)
+    if r.status_code != 200:
+        raise AttributeError()
+
+    local_filename = 'manifest.f4m'
+
+    with open(local_filename, 'w') as f:
+        f.write(r.text)
+
+    return local_filename, os.path.dirname(url)
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         usage(sys.argv[0])
 
     manifestPath = sys.argv[1]
+
+    manifestPath, base_url = (manifestPath, None) if not manifestPath.startswith('http:') else downloadManifest(manifestPath)
+
     manifest = Manifest(filepath=manifestPath, base_url=base_url)
