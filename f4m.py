@@ -10,6 +10,7 @@ from lxml import etree
 import base64
 import logging
 import struct
+import sys
 
 
 stream = logging.StreamHandler()
@@ -250,8 +251,14 @@ class Manifest(object):
             fragment,
         )
 
+def usage(progname):
+    print('usage: %s <manifest>' % progname)
+    sys.exit(0)
+
 
 if __name__ == '__main__':
-    import sys
-    manifest = Manifest(filepath=sys.argv[1])
+    if len(sys.argv) < 2:
+        usage(sys.argv[0])
 
+    manifestPath = sys.argv[1]
+    manifest = Manifest(filepath=manifestPath, base_url=base_url)
