@@ -246,12 +246,14 @@ class Manifest(object):
             return node.attrib[attr] if node.attrib.has_key(attr) else None
 
         for m in medias:
+            metadata = m.xpath('adobe:metadata', **self.ADOBE_NSS)[0]
             media_attr = {
                 'url':             __get_attr(m, 'url'),
                 'bitrate':         __get_attr(m, 'bitrate'),
                 'width':           __get_attr(m, 'width'),
                 'height':          __get_attr(m, 'height'),
                 'bootstrapInfoId': __get_attr(m, 'bootstrapInfoId'),
+                'metadata':        base64.b64decode(metadata.text),
                 # FIXME: add missing info
             }
             logger.debug('found media: %s' % media_attr)
