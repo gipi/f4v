@@ -287,6 +287,12 @@ def downloadManifest(url):
 
     return local_filename, os.path.dirname(url)
 
+def FLVHeader():
+    return '464c5601050000000900000000'.decode('hex')
+
+def FLVMetadata(metadata):
+    return ('12%06x%06x%08x' % (len(metadata), 0, 0)).decode('hex') + metadata 
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         usage(sys.argv[0])
