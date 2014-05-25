@@ -263,7 +263,7 @@ class Manifest(object):
         return tree.xpath(xpath, **self.ADOBE_NSS)
 
     def getUrl(self, segment, fragment):
-        return 'http://%s/%s%sSeg%d-Frag%d' % (
+        return '%s/%s%sSeg%d-Frag%d' % (
             self.baseURL,
             self.id,
             "", # quality segment url modifier
