@@ -293,6 +293,14 @@ def FLVHeader():
 def FLVMetadata(metadata):
     return ('12%06x%06x%08x' % (len(metadata), 0, 0)).decode('hex') + metadata 
 
+def mountFragments(fragmentFilePaths, outputFilePath):
+    with open(outputFilePath, 'w') as outFile:
+        for path in fragmentFilePaths:
+            with open(path) as fragmentFile:
+                for box in iterOver(fragmentFile.read()):
+                    if box[1] == 'mdat':
+                        outFile.write(box[2])
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         usage(sys.argv[0])
